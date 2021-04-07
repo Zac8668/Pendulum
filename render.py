@@ -2,7 +2,7 @@ import sys
 
 import pygame
 from pendulum import Pendulum, DoublePendulum
-from math import pi
+from math import pi, hypot
 
 class Render:
     def __init__(self):
@@ -13,8 +13,8 @@ class Render:
         self.screen = pygame.display.set_mode(self.screen_res)
         self.fps = 60
         
-        pivot = [self.screen_res[0] / 2, self.screen_res[1] / 4]
-        self.pend = DoublePendulum(pivot, 100, pi / 4)
+        pivot = [self.screen_res[0] / 2, self.screen_res[1] / 6]
+        self.pend = DoublePendulum(pivot, 150, pi / 2)
         
     def draw_text(self, text:str, pos):
         text_img = pygame.font.SysFont('Calibri', 20).render(text, True, (255,255,255))
@@ -31,25 +31,26 @@ class Render:
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
+                elif event.type == pygame.MOUSEMOTION:
+                    mouse_motion = event.rel
 
             self.screen.fill((0, 0, 0))
             
-            pressed = pygame.key.get_pressed()
-            
-            if pressed[pygame.K_a]:
-                self.pend.velocity1 -= 0.1
+            left_click = pygame.mouse.get_pressed()[0]
+            right_click = pygame.mouse.get_pressed()[2]
                 
-            if pressed[pygame.K_d]:
-                self.pend.velocity1 += 0.1
+            if left_click and mouse_motion:
+                self.pend.angle1 += mouse_motion[0] * 0.01
+                self.pend.bob1 = self.pend.bob1_pos()
+                self.pend.bob2 = self.pend.bob2_pos()
+            elif right_click and mouse_motion:
+                self.pend.angle2 += mouse_motion[0] * 0.01
+                self.pend.bob1 = self.pend.bob1_pos()
+                self.pend.bob2 = self.pend.bob2_pos()
                 
-            if pressed[pygame.K_LEFT]:
-                self.pend.velocity2 -= 0.1
-                
-            if pressed[pygame.K_RIGHT]:
-                self.pend.velocity2 += 0.1
-            
-            #update screen
-            self.pend.update()
+            else:
+                color = (255, 255, 255)
+                self.pend.update()
             
             #draw some text
             self.draw_text(f'angle1: {self.pend.angle1:.6f}', [10, 10])
@@ -62,7 +63,7 @@ class Render:
             
             #draw pendulum
             pygame.draw.line(self.screen, (255, 255, 255), [self.pend.pivot[0] - 1, self.pend.pivot[1]], [self.pend.bob1[0] - 1, self.pend.bob1[1]], 3)
-            pygame.draw.circle(self.screen, (255, 255, 255), self.pend.bob1, 8)
+            pygame.draw.circle(self.screen, color, self.pend.bob1, 8)
             pygame.draw.line(self.screen, (255, 255, 255), [self.pend.bob1[0] - 1, self.pend.bob1[1]], [self.pend.bob2[0] - 1, self.pend.bob2[1]], 3)
             pygame.draw.circle(self.screen, (255, 255, 255), self.pend.bob2, 8)
             

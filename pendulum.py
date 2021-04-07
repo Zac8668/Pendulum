@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from math import pi, sin, cos
+import sys
 
 class Pendulum:
     def __init__(self, pivot:list, length, angle:float = 0, gravity = -0.03, friction = 0.96):
@@ -45,7 +46,7 @@ class Pendulum:
         self.check_physics()
         
 class DoublePendulum:
-    def __init__(self, pivot:list, length, angle:float = 0, gravity = 1, friction = 0.96):
+    def __init__(self, pivot:list, length, angle:float = 0, gravity = 1.2, friction = 0.99):
         self.pivot = pivot
         self.length1 = length
         self.angle1 = angle
@@ -111,24 +112,29 @@ class DoublePendulum:
         dividend4 = self.velocity2 ** 2 * self.length2 * self.mass2 * cos(self.angle1 - self.angle2)
         
         dividend = dividend1 * (dividend2 + dividend3 + dividend4)
-        
+    
         divisor = self.length2 * (2 * self.mass1 + self.mass2 - self.mass2 * cos(2 * self.angle1 - 2 * self.angle2))
         
         return dividend / divisor
         
     def check_physics(self):
-        self.acceleration1 = self.calc_acc1()
+        self.velocity1 *= self.FRICTION
+        self.velocity2 *= self.FRICTION
         
-        self.velocity1 += self.acceleration1
-        self.angle1 += self.velocity1
-        
-        self.acceleration2 = self.calc_acc2()
-        
-        self.velocity2 += self.acceleration2
-        self.angle2 += self.velocity2
+        try:
+            self.acceleration1 = self.calc_acc1()
+            self.acceleration2 = self.calc_acc2()
+        except OverflowError:
+            pass
         
         self.velocity1 *= self.FRICTION
         self.velocity2 *= self.FRICTION
+        
+        self.velocity1 += self.acceleration1
+        self.velocity2 += self.acceleration2
+        
+        self.angle1 += self.velocity1
+        self.angle2 += self.velocity2
         
         self.bob1 = self.bob1_pos()
         self.bob2 = self.bob2_pos()
